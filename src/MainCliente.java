@@ -5,8 +5,6 @@ import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 public class MainCliente extends JFrame implements ActionListener {
@@ -16,6 +14,7 @@ public class MainCliente extends JFrame implements ActionListener {
     JTextArea NumerosAOrdenar, ResultadoMerge, ResultadoFork, ResultadoExecutor;
     JButton generarButton, ordenarMergeButton, ordenarForkJoinButton, ordenarExecuteButton, limpiarButton;
     int[] generatedArray;
+    int[] combinedArray; // Store the combined array
 
     RandomDataGenerator generator = null;
     int puerto = 1099;
@@ -164,6 +163,15 @@ public class MainCliente extends JFrame implements ActionListener {
         }
     }
 
+    private void fetchCombinedData() {
+        try {
+            combinedArray = generator.combineArrays();
+            generator.clearData(); // Clear server data to prevent re-adding the same data
+        } catch (RemoteException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
     private void sortAndDisplay(int[] data, JTextArea resultArea, JTextField timeField, Runnable sortAlgorithm) {
         long startTime = System.nanoTime();
         sortAlgorithm.run();
@@ -182,39 +190,23 @@ public class MainCliente extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == generarButton) {
             generatedArray = generateData();
+            sendData(generatedArray);
+            fetchCombinedData(); // Fetch combined data after sending new data
         } else if (e.getSource() == ordenarMergeButton) {
-            try {
-                sendData(generatedArray);
-                int[] dataC = generator.combineArrays();
-                sortAndDisplay(dataC, ResultadoMerge, TiempoMergeField, () -> {
-                    LogicaMerge mergeLogic = new LogicaMerge();
-                    mergeLogic.mergeSort(dataC);
-                });
-            } catch (RemoteException ex) {
-                throw new RuntimeException(ex);
-            }
+            sortAndDisplay(combinedArray, ResultadoMerge, TiempoMergeField, () -> {
+                LogicaMerge mergeLogic = new LogicaMerge();
+                mergeLogic.mergeSort(combinedArray);
+            });
         } else if (e.getSource() == ordenarForkJoinButton) {
-            try {
-                sendData(generatedArray);
-                int[] dataC = generator.combineArrays();
-                sortAndDisplay(dataC, ResultadoFork, TiempoForkField, () -> {
-                    LogicaForkJoin logicaForkJoin = new LogicaForkJoin();
-                    logicaForkJoin.ForkJoin(dataC);
-                });
-            } catch (RemoteException ex) {
-                throw new RuntimeException(ex);
-            }
+            sortAndDisplay(combinedArray, ResultadoFork, TiempoForkField, () -> {
+                LogicaForkJoin logicaForkJoin = new LogicaForkJoin();
+                logicaForkJoin.ForkJoin(combinedArray);
+            });
         } else if (e.getSource() == ordenarExecuteButton) {
-            try {
-                sendData(generatedArray);
-                int[] dataC = generator.combineArrays();
-                sortAndDisplay(dataC, ResultadoExecutor, TiempoExecutorField, () -> {
-                    LogicaExecuteService logicaExecuteService = new LogicaExecuteService();
-                    logicaExecuteService.executorService(dataC);
-                });
-            } catch (RemoteException ex) {
-                throw new RuntimeException(ex);
-            }
+            sortAndDisplay(combinedArray, ResultadoExecutor, TiempoExecutorField, () -> {
+                LogicaExecuteService logicaExecuteService = new LogicaExecuteService();
+                logicaExecuteService.executorService(combinedArray);
+            });
         } else if (e.getSource() == limpiarButton) {
             limpiarCampos();
         }
