@@ -2,6 +2,19 @@ import java.util.Arrays;
 
 public class LogicaMerge {
     public void mergeSort(int[] array) {
+        int delay = 0;
+        if (array.length > 100 && array.length <= 1000) {
+            delay = 15;
+        } else if (array.length > 1000) {
+            delay = 50;
+        }
+
+        try {
+            Thread.sleep(delay);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
         if (array.length > 1) {
             int mid = array.length / 2;
             int[] left = Arrays.copyOfRange(array, 0, mid);
@@ -10,7 +23,6 @@ public class LogicaMerge {
             mergeSort(left);
             mergeSort(right);
             merge(array, left, right);
-
         }
     }
 

@@ -48,9 +48,14 @@ public class RandomDataGeneratorImpl extends UnicastRemoteObject implements Rand
         return combinedArray;
     }
 
-
     @Override
     public void clearData() throws RemoteException {
         dataList.clear();
     }
+
+    @Override
+    public void clearCombinedArrays() throws RemoteException {
+        dataList.clear();
+    }
+
 }
