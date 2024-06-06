@@ -5,7 +5,6 @@ import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -16,8 +15,7 @@ public class MainCliente extends JFrame implements ActionListener {
     JTextField Cantidad, TiempoMergeField, TiempoForkField, TiempoExecutorField;
     JTextArea NumerosAOrdenar, ResultadoMerge, ResultadoFork, ResultadoExecutor;
     JButton generarButton, ordenarMergeButton, ordenarForkJoinButton, ordenarExecuteButton, limpiarButton;
-
-    private int[] generatedArray;
+    int[] generatedArray;
 
     RandomDataGenerator generator = null;
     int puerto = 1099;
@@ -131,7 +129,11 @@ public class MainCliente extends JFrame implements ActionListener {
 
         try {
             generator = (RandomDataGenerator) Naming.lookup(url);
-        } catch (NotBoundException | MalformedURLException | RemoteException e) {
+        } catch (NotBoundException e) {
+            throw new RuntimeException(e);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        } catch (RemoteException e) {
             throw new RuntimeException(e);
         }
         setVisible(true);
@@ -153,7 +155,6 @@ public class MainCliente extends JFrame implements ActionListener {
     }
 
     private void sendData(int[] data) {
-        clearServerData();
         try {
             generator.addArray(data);
             JOptionPane.showMessageDialog(this, "Datos enviados al servidor.", "Información", JOptionPane.INFORMATION_MESSAGE);
@@ -162,31 +163,19 @@ public class MainCliente extends JFrame implements ActionListener {
             ex.printStackTrace();
         }
     }
-    private void clearServerData() {
-        try {
-            generator.clearData();
-        } catch (RemoteException e) {
-            JOptionPane.showMessageDialog(this, "Error clearing server data.", "Error", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
-        }
-    }
 
     private void sortAndDisplay(int[] data, JTextArea resultArea, JTextField timeField, Runnable sortAlgorithm) {
         long startTime = System.nanoTime();
         sortAlgorithm.run();
         long endTime = System.nanoTime();
-        long durationInNano = endTime - startTime;
+        long duration = (endTime - startTime) / 1000000;
 
-        double durationInMillis = durationInNano / 1_000_000.0;
-        DecimalFormat df = new DecimalFormat("0.000000");
-        StringBuilder timeDetail = new StringBuilder();
-        timeDetail.append(" ").append(df.format(durationInMillis)).append(" ms");
         StringBuilder sortedData = new StringBuilder();
         for (int num : data) {
             sortedData.append(num).append(" ");
         }
         resultArea.setText(sortedData.toString());
-        timeField.setText(timeDetail.toString());
+        timeField.setText(String.valueOf(duration));
     }
 
     @Override

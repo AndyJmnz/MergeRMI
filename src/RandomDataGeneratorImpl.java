@@ -16,9 +16,15 @@ public class RandomDataGeneratorImpl extends UnicastRemoteObject implements Rand
 
     @Override
     public int[] combineArrays() throws RemoteException {
-        // Combine arrays, but make sure to handle the logic to avoid unintended combining
         if (dataList.isEmpty()) return new int[0];
-        return dataList.get(dataList.size() - 1); // Return only the last added array for simplicity
+        int totalLength = dataList.stream().mapToInt(arr -> arr.length).sum();
+        int[] combinedArray = new int[totalLength];
+        int index = 0;
+        for (int[] array : dataList) {
+            System.arraycopy(array, 0, combinedArray, index, array.length);
+            index += array.length;
+        }
+        return combinedArray;
     }
 
     @Override
