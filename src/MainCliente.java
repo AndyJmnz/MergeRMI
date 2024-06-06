@@ -5,6 +5,7 @@ import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.text.DecimalFormat;
 import java.util.Random;
 
 public class MainCliente extends JFrame implements ActionListener {
@@ -12,9 +13,9 @@ public class MainCliente extends JFrame implements ActionListener {
     JLabel nombre_original, nombre_resultado, nombre2_resultado, nombre3_resultado, tiempo_label, tiempo2_label, tiempo3_label;
     JTextField Cantidad, TiempoMergeField, TiempoForkField, TiempoExecutorField;
     JTextArea NumerosAOrdenar, ResultadoMerge, ResultadoFork, ResultadoExecutor;
-    JButton generarButton, ordenarMergeButton, ordenarForkJoinButton, ordenarExecuteButton, limpiarButton;
-    int[] generatedArray;
-    int[] combinedArray; // Store the combined array
+    JButton generarButton, ordenarMergeButton, ordenarForkJoinButton, ordenarExecuteButton, limpiarButton, combinarButton;
+    int[] combinedArray;
+    private int[] generatedArray;// Store the combined array
 
     RandomDataGenerator generator = null;
     int puerto = 1099;
@@ -101,13 +102,18 @@ public class MainCliente extends JFrame implements ActionListener {
         TiempoExecutorField.setEditable(false);
         add(TiempoExecutorField);
 
-        generarButton = new JButton("Enviar");
+        generarButton = new JButton("Generar");
         generarButton.setBounds(50, 450, 100, 25);
         generarButton.addActionListener(this);
         add(generarButton);
 
+        combinarButton = new JButton("Enviar");
+        combinarButton.setBounds(200, 450, 100, 25);
+        combinarButton.addActionListener(this);
+        add(combinarButton);
+
         limpiarButton = new JButton("Limpiar");
-        limpiarButton.setBounds(200, 450, 100, 25);
+        limpiarButton.setBounds(350, 450, 100, 25);
         limpiarButton.addActionListener(this);
         add(limpiarButton);
 
@@ -138,6 +144,7 @@ public class MainCliente extends JFrame implements ActionListener {
         setVisible(true);
     }
 
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(MainCliente::new);
     }
@@ -156,19 +163,10 @@ public class MainCliente extends JFrame implements ActionListener {
     private void sendData(int[] data) {
         try {
             generator.addArray(data);
-            JOptionPane.showMessageDialog(this, "Datos enviados al servidor.", "Información", JOptionPane.INFORMATION_MESSAGE);
+            //JOptionPane.showMessageDialog(this, "Datos enviados al servidor.", "Información", JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error al enviar datos al servidor.", "Error", JOptionPane.ERROR_MESSAGE);
             ex.printStackTrace();
-        }
-    }
-
-    private void fetchCombinedData() {
-        try {
-            combinedArray = generator.combineArrays();
-            generator.clearData(); // Clear server data to prevent re-adding the same data
-        } catch (RemoteException ex) {
-            throw new RuntimeException(ex);
         }
     }
 
@@ -176,14 +174,17 @@ public class MainCliente extends JFrame implements ActionListener {
         long startTime = System.nanoTime();
         sortAlgorithm.run();
         long endTime = System.nanoTime();
-        long duration = (endTime - startTime) / 1000000;
+        double duration = (endTime - startTime) / 1.0e6;
+
+        DecimalFormat df = new DecimalFormat("#.###");
+        String formattedDuration = df.format(duration);
 
         StringBuilder sortedData = new StringBuilder();
         for (int num : data) {
             sortedData.append(num).append(" ");
         }
         resultArea.setText(sortedData.toString());
-        timeField.setText(String.valueOf(duration));
+        timeField.setText(formattedDuration);
     }
 
     @Override
@@ -191,7 +192,12 @@ public class MainCliente extends JFrame implements ActionListener {
         if (e.getSource() == generarButton) {
             generatedArray = generateData();
             sendData(generatedArray);
-            fetchCombinedData(); // Fetch combined data after sending new data
+        } else if (e.getSource() == combinarButton) {
+            try {
+                combinedArray = generator.combineArrays();
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
         } else if (e.getSource() == ordenarMergeButton) {
             sortAndDisplay(combinedArray, ResultadoMerge, TiempoMergeField, () -> {
                 LogicaMerge mergeLogic = new LogicaMerge();

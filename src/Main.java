@@ -121,7 +121,7 @@ public class Main extends JFrame implements ActionListener {
         try {
             java.rmi.registry.LocateRegistry.createRegistry(1099);
 
-            RandomDataGeneratorImpl generator = new RandomDataGeneratorImpl();
+            RandomDataGeneratorImpl generator = new RandomDataGeneratorImpl(2);
 
             Naming.rebind("//192.168.0.28/RandomDataGenerator", generator);
 
